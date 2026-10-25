@@ -18,6 +18,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             message TEXT NOT NULL,
+            color TEXT NOT NULL,
             created_at TEXT NOT NULL
         )""")
 
@@ -36,11 +37,12 @@ def create_message():
     data = request.get_json(silent=True) or {}
     name = str(data.get("name", "")).strip()[:30]
     message = str(data.get("message", "")).strip()[:300]
+    color = str(data.get("color", "black"))
     if not name or not message:
         return jsonify({"error": "name and message are required"}), 400
     created_at = datetime.now(timezone.utc).isoformat()
     with connect() as con:
-        cur = con.execute("INSERT INTO messages(name,message,created_at) VALUES(?,?,?)", (name,message,created_at))
+        cur = con.execute("INSERT INTO messages(name,message,color,created_at) VALUES(?,?,?,?)", (name,message,color,created_at))
         row = con.execute("SELECT * FROM messages WHERE id=?", (cur.lastrowid,)).fetchone()
     return jsonify(dict(row)), 201
 
