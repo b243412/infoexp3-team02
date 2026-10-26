@@ -2,6 +2,7 @@ from flask import Flask, jsonify, render_template, request
 from pathlib import Path
 import sqlite3
 from datetime import datetime, timezone
+import random
 
 app = Flask(__name__)
 DB = Path("data/miniboard.db")
@@ -19,6 +20,7 @@ def init_db():
             name TEXT NOT NULL,
             message TEXT NOT NULL,
             color TEXT NOT NULL,
+            font TEXT NOT NULL,
             created_at TEXT NOT NULL
         )""")
 
@@ -38,11 +40,14 @@ def create_message():
     name = str(data.get("name", "")).strip()[:30]
     message = str(data.get("message", "")).strip()[:300]
     color = str(data.get("color", "black"))
+    font = str(data.get("font", "sans-serif"))
+    if font == "random":
+        font = random.choice(["sans-serif","serif","monospace","cursive"])
     if not name or not message:
         return jsonify({"error": "name and message are required"}), 400
     created_at = datetime.now(timezone.utc).isoformat()
     with connect() as con:
-        cur = con.execute("INSERT INTO messages(name,message,color,created_at) VALUES(?,?,?,?)", (name,message,color,created_at))
+        cur = con.execute("INSERT INTO messages(name,message,color,font,created_at) VALUES(?,?,?,?,?)", (name,message,color,font,created_at))
         row = con.execute("SELECT * FROM messages WHERE id=?", (cur.lastrowid,)).fetchone()
     return jsonify(dict(row)), 201
 
